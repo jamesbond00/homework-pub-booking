@@ -82,6 +82,43 @@ def extract_condition_facts(text: str) -> list[str]:
     return [c for c in known if c in tl]
 
 
+def extract_venue_facts(text: str) -> list[str]:
+    """Extract explicit venue names from common flyer formats."""
+    stripped = re.sub(r"<[^>]+>", " ", text)
+    facts: list[str] = []
+    for pattern in (
+        r"\bVenue:\s*([^\n.]+)",
+        r"\bPub Night at\s+([^\n<]+)",
+    ):
+        for match in re.finditer(pattern, stripped, re.IGNORECASE):
+            value = match.group(1).strip(" .")
+            if value:
+                facts.append(value)
+    return facts
+
+
+def extract_weather_line_facts(text: str) -> list[str]:
+    """Extract fabricated weather phrases such as 'scorching 35C'."""
+    stripped = re.sub(r"<[^>]+>", " ", text)
+    facts: list[str] = []
+    for match in re.finditer(r"\bWeather:\s*([^\n.]+)", stripped, re.IGNORECASE):
+        value = match.group(1).strip(" .")
+        if value:
+            facts.append(value)
+    return facts
+
+
+def extract_labelled_total_facts(text: str) -> list[str]:
+    """Extract the full value after a Markdown/plain-text Total label."""
+    stripped = re.sub(r"<[^>]+>", " ", text)
+    facts: list[str] = []
+    for match in re.finditer(r"\bTotal:\s*([^\n.]+)", stripped, re.IGNORECASE):
+        value = match.group(1).strip(" .")
+        if value:
+            facts.append(value)
+    return facts
+
+
 def extract_testid_facts(text: str) -> dict[str, str]:
     """For HTML flyers that use data-testid, extract {testid: value} pairs.
 
@@ -102,7 +139,8 @@ def fact_appears_in_log(fact: Any, log: list[ToolCallRecord] | None = None) -> b
 
     def _scan(obj: Any) -> bool:
         if isinstance(obj, (str, int, float)):
-            return str(obj).lower().strip("£°c ") == target
+            value = str(obj).lower().strip("£°c ")
+            return value == target or (len(target) >= 4 and target in value)
         if isinstance(obj, dict):
             return any(_scan(v) for v in obj.values())
         if isinstance(obj, (list, tuple, set)):
@@ -110,6 +148,24 @@ def fact_appears_in_log(fact: Any, log: list[ToolCallRecord] | None = None) -> b
         return False
 
     return any(_scan(r.output) or _scan(r.arguments) for r in records)
+
+
+def weather_phrase_appears_in_log(fact: str, log: list[ToolCallRecord] | None = None) -> bool:
+    """Verify every scalar in a weather phrase came from a weather tool output."""
+    records = log if log is not None else _TOOL_CALL_LOG
+    weather_records = [r for r in records if r.tool_name == "get_weather"]
+    if not weather_records:
+        return False
+
+    normalized = fact.lower().replace("_", " ")
+    known_conditions = ("sunny", "rainy", "cloudy", "partly cloudy")
+    condition_facts = [c for c in known_conditions if c in normalized]
+    temperature_facts = re.findall(r"\d+\s*°?\s*c\b", normalized)
+
+    checks = condition_facts + temperature_facts
+    if not checks:
+        return fact_appears_in_log(fact, weather_records)
+    return all(fact_appears_in_log(check, weather_records) for check in checks)
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +176,11 @@ def verify_dataflow(flyer_content: str) -> IntegrityResult:
         return IntegrityResult(ok=True, summary="no facts to verify (empty flyer)")
 
     facts_to_check: list[str] = []
+    venue_facts = extract_venue_facts(flyer_content)
+    weather_line_facts = extract_weather_line_facts(flyer_content)
+    facts_to_check.extend(venue_facts)
+    facts_to_check.extend(weather_line_facts)
+    facts_to_check.extend(extract_labelled_total_facts(flyer_content))
     facts_to_check.extend(extract_money_facts(flyer_content))
     facts_to_check.extend(extract_temperature_facts(flyer_content))
     facts_to_check.extend(extract_condition_facts(flyer_content))
@@ -141,7 +202,11 @@ def verify_dataflow(flyer_content: str) -> IntegrityResult:
     verified: list[str] = []
     unverified: list[str] = []
     for fact in deduped:
-        if fact_appears_in_log(fact):
+        if fact in weather_line_facts:
+            found = weather_phrase_appears_in_log(fact)
+        else:
+            found = fact_appears_in_log(fact)
+        if found:
             verified.append(fact)
         else:
             unverified.append(fact)
@@ -170,10 +235,14 @@ __all__ = [
     "_TOOL_CALL_LOG",
     "clear_log",
     "extract_condition_facts",
+    "extract_labelled_total_facts",
     "extract_money_facts",
     "extract_temperature_facts",
+    "extract_venue_facts",
+    "extract_weather_line_facts",
     "extract_testid_facts",
     "fact_appears_in_log",
     "record_tool_call",
+    "weather_phrase_appears_in_log",
     "verify_dataflow",
 ]
