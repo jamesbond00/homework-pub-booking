@@ -15,6 +15,11 @@ ifneq (,$(wildcard .env))
     export
 endif
 
+# Newer rasa-pro releases read RASA_LICENSE. Older homework docs used
+# RASA_PRO_LICENSE, so keep it as a compatibility alias.
+RASA_LICENSE ?= $(RASA_PRO_LICENSE)
+export RASA_LICENSE
+
 # ── Terminal colours ──────────────────────────────────────────────────
 # Uses tput if available; falls back to empty strings if not.
 GREEN   := $(shell tput -Txterm setaf 2 2>/dev/null)
@@ -202,6 +207,29 @@ define _rasa_preflight
 	fi
 endef
 
+define _rasa_license_preflight
+	@if [ -z "$${RASA_LICENSE:-$${RASA_PRO_LICENSE}}" ]; then \
+	  echo ""; \
+	  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	  echo "  ✗ Rasa Pro license is not configured"; \
+	  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+	  echo ""; \
+	  echo "  Rasa now expects the license in RASA_LICENSE."; \
+	  echo "  Add your developer-edition JWT to .env:"; \
+	  echo ""; \
+	  echo "      RASA_LICENSE=eyJh..."; \
+	  echo ""; \
+	  echo "  If you already have an older RASA_PRO_LICENSE entry, this"; \
+	  echo "  Makefile will still pass it through as RASA_LICENSE."; \
+	  echo ""; \
+	  echo "  No license yet? Use the offline Ex6 path:"; \
+	  echo ""; \
+	  echo "      make ex6"; \
+	  echo ""; \
+	  exit 1; \
+	fi
+endef
+
 .PHONY: setup-rasa
 setup-rasa: ## Install rasa-pro + deps (needed for Ex6 tier 2 and 3)
 	@echo "▶ Installing rasa-pro and related deps into .venv..."
@@ -224,17 +252,20 @@ setup-voice: ## Install speechmatics + rime TTS + mic deps (needed for Ex8 voice
 .PHONY: rasa-train
 rasa-train: ## Train the Rasa model (reruns use the cached model)
 	$(_rasa_preflight)
+	$(_rasa_license_preflight)
 	@cd rasa_project && OPENAI_API_KEY="$${NEBIUS_KEY}" $(UV) run rasa train
 
 .PHONY: rasa-actions
 rasa-actions: ## Terminal 1 — run the Rasa action server on :5055
 	$(_rasa_preflight)
+	$(_rasa_license_preflight)
 	@echo "▶ Starting Rasa action server (port 5055). Ctrl-C to stop."
 	@cd rasa_project && OPENAI_API_KEY="$${NEBIUS_KEY}" $(UV) run rasa run actions -p 5055
 
 .PHONY: rasa-serve
 rasa-serve: ## Terminal 2 — run the Rasa server on :5005 (trains if needed)
 	$(_rasa_preflight)
+	$(_rasa_license_preflight)
 	@cd rasa_project && \
 	  if [ ! -d models ] || [ -z "$$(ls -A models 2>/dev/null)" ]; then \
 	    echo "▶ No trained model found; running rasa train first..."; \

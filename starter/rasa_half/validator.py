@@ -159,7 +159,7 @@ def _normalise_date(raw: str) -> str:
 # ---------------------------------------------------------------------------
 # Helpers — provided. You may use them or write your own.
 # ---------------------------------------------------------------------------
-_GBP_PATTERN = re.compile(r"£?\s*(\d+(?:\.\d+)?)\s*(?:gbp|GBP)?", re.IGNORECASE)
+_GBP_PATTERN = re.compile(r"(?:£\s*)?(-?\d+(?:\.\d+)?)\s*(?:gbp)?", re.IGNORECASE)
 
 
 def parse_currency_gbp(raw: str | int | float) -> int:
@@ -169,7 +169,7 @@ def parse_currency_gbp(raw: str | int | float) -> int:
         if raw < 0:
             raise ValidationFailed(f"negative currency: {raw!r}")
         return int(raw)
-    m = _GBP_PATTERN.search(str(raw).strip())
+    m = _GBP_PATTERN.fullmatch(str(raw).strip())
     if not m:
         raise ValidationFailed(f"cannot parse currency: {raw!r}")
     value = float(m.group(1))

@@ -106,7 +106,7 @@ Rasa Pro is free for developers (generous tier) but you need to sign up.
 1. Go to **https://rasa.com/rasa-pro-developer-edition/**
 2. Sign up with your email. Approval is usually within a few hours.
 3. You receive a JWT string by email — copy it.
-4. Paste it into your `.env` as `RASA_PRO_LICENSE=eyJh...`.
+4. Paste it into your `.env` as `RASA_LICENSE=eyJh...`.
 
 **About the JWT format:**
 - Single line, no quotes.
@@ -235,7 +235,7 @@ same port.
 
 ### "training failed: invalid license"
 
-Your `RASA_PRO_LICENSE` is wrong. Check:
+Your `RASA_LICENSE` is wrong. Check:
 - No quotes around the JWT in `.env`
 - No newlines (it's one long line)
 - You didn't accidentally swap it with a different key
@@ -244,7 +244,7 @@ Test the token with Rasa's CLI directly:
 
 ```bash
 cd rasa_project
-RASA_PRO_LICENSE="your-jwt" rasa train --help
+RASA_LICENSE="your-jwt" rasa train --help
 ```
 
 If that prints help text without license errors, the token is valid.

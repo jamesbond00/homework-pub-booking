@@ -23,6 +23,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from socket import timeout as SocketTimeout
 from urllib import request as urllib_request
 from urllib.error import HTTPError, URLError
 
@@ -134,7 +135,7 @@ class RasaStructuredHalf(StructuredHalf):
                 summary=f"rasa unreachable: {e}",
                 next_action="escalate",
             )
-        except TimeoutError:
+        except (TimeoutError, SocketTimeout):
             return HalfResult(
                 success=False,
                 output={"error": "timeout", "error_code": "SA_EXT_TIMEOUT"},
@@ -174,7 +175,12 @@ class RasaStructuredHalf(StructuredHalf):
                     booking_reference = text.split("reference:", 1)[1].strip().rstrip(".").upper()
             if action == "rejected" or "can't accept" in text or "rejected" in text:
                 rejected = True
-                rejection_reason = text or "rejected by rasa"
+                if isinstance(custom, dict) and custom.get("reason"):
+                    rejection_reason = str(custom["reason"])
+                elif "reason:" in text:
+                    rejection_reason = text.split("reason:", 1)[1].strip().rstrip(".")
+                else:
+                    rejection_reason = text or "rejected by rasa"
 
         if confirmed and not rejected:
             return HalfResult(
@@ -269,12 +275,14 @@ class RasaHostLifecycle:
                 pass
 
     async def __aenter__(self) -> str:
-        if not os.environ.get("RASA_PRO_LICENSE"):
+        license_value = os.environ.get("RASA_LICENSE") or os.environ.get("RASA_PRO_LICENSE")
+        if not license_value:
             raise RuntimeError(
-                "RASA_PRO_LICENSE is not set. Rasa Pro refuses to start "
-                "without a license. Set it in your .env, or use the mock "
-                "server (spawn_mock_rasa) as a fallback."
+                "RASA_LICENSE is not set. Rasa Pro refuses to start without "
+                "a license. Set RASA_LICENSE in your .env, or use the mock "
+                "server (make ex6) as a fallback."
             )
+        os.environ.setdefault("RASA_LICENSE", license_value)
 
         if not self.rasa_project_dir.exists():
             raise RuntimeError(
@@ -383,7 +391,7 @@ class RasaHostLifecycle:
                 cwd=str(cwd),
                 stdout=fh,
                 stderr=subprocess.STDOUT,
-                env={**os.environ},  # inherit RASA_PRO_LICENSE, NEBIUS_KEY, etc.
+                env={**os.environ},  # inherit RASA_LICENSE, NEBIUS_KEY, etc.
             )
         except FileNotFoundError as e:
             raise RuntimeError(
