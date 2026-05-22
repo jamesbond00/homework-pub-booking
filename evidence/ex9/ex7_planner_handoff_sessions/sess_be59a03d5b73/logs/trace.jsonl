@@ -1,0 +1,2 @@
+{"event_type": "planner.called", "actor": "default", "timestamp": "2026-05-22T20:23:31.000840+00:00", "payload": {"task_preview": "Confirm booking for Haymarket Tap under policy rules"}}
+{"event_type": "planner.produced_subgoals", "actor": "default", "timestamp": "2026-05-22T20:23:31.003139+00:00", "payload": {"num_subgoals": 1}}

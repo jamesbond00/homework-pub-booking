@@ -70,3 +70,6 @@ tests/private/*
 # sibling private repo (homework-pub-booking-solutions) that isn't open.
 solution/
 educator/_scratch/
+agents-office-hour-slides.pdf
+Summary.summary.md
+**/manifest.json

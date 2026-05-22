@@ -1,0 +1,11 @@
+[
+  {
+    "id": "sg_confirm",
+    "description": "confirm the booking under policy rules",
+    "success_criterion": "structured half approves or rejects according to caps",
+    "estimated_tool_calls": 1,
+    "depends_on": [],
+    "assigned_half": "structured",
+    "status": "pending"
+  }
+]
