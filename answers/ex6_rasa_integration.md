@@ -27,7 +27,7 @@ Real mode was verified on 2026-05-19 with `make ex6-real`. The probe
 confirmed Rasa on `localhost:5005` and the action server on
 `localhost:5055`, with Rasa reporting version 3.16.4. The run created
 session `sess_6c53cba2997c` at
-`/Users/alex/Library/Application Support/sovereign-agent/examples/ex6-rasa-half/sess_6c53cba2997c`
+`sovereign-agent/examples/ex6-rasa-half/sess_6c53cba2997c`
 and completed successfully:
 
 ```text
