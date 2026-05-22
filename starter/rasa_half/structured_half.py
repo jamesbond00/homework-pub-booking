@@ -23,7 +23,6 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from socket import timeout as SocketTimeout
 from urllib import request as urllib_request
 from urllib.error import HTTPError, URLError
 
@@ -135,7 +134,7 @@ class RasaStructuredHalf(StructuredHalf):
                 summary=f"rasa unreachable: {e}",
                 next_action="escalate",
             )
-        except (TimeoutError, SocketTimeout):
+        except TimeoutError:
             return HalfResult(
                 success=False,
                 output={"error": "timeout", "error_code": "SA_EXT_TIMEOUT"},

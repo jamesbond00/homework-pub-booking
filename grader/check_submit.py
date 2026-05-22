@@ -93,13 +93,15 @@ def run_mechanical(only: str | None) -> LayerResult:
     layer.checks.append(_check("ruff_format_clean", rc == 0, 2))
 
     # pytest collection
-    rc, _, _ = _run(["uv", "run", "pytest", "--collect-only", "-q"])
+    rc, _, _ = _run(["uv", "run", "python", "-m", "pytest", "--collect-only", "-q"])
     layer.checks.append(_check("pytest_collects", rc == 0, 3))
 
     # public tests — require genuine passes. A scaffold ships tests that
     # pytest.skip() when student TODOs are unimplemented; those are skips,
     # not passes. Parse the summary line to distinguish.
-    rc, out, err = _run(["uv", "run", "pytest", "tests/public", "-q", "--no-header"])
+    rc, out, err = _run(
+        ["uv", "run", "python", "-m", "pytest", "tests/public", "-q", "--no-header"]
+    )
     combined = (out or "") + (err or "")
     passed_count = 0
     skipped_count = 0

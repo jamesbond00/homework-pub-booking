@@ -2,6 +2,21 @@
 
 ## Your answer
 
+Beginner summary: Ex7 is the "try again" layer. The loop half is good at
+open-ended research, such as finding a pub. The structured half is good at
+checking strict rules, such as party-size and deposit limits. The handoff
+bridge sits between them. It sends the loop half's proposed booking to the
+structured half, listens for approval or rejection, and if the structured
+half rejects the booking, sends the reason back to the loop half so it can
+search again instead of stopping.
+
+In the demo, the loop half first proposes Haymarket Tap for a party of 12.
+The structured half rejects that because the booking violates the policy.
+The bridge carries the rejection reason back, the loop half retries with a
+different venue, and the structured half confirms the second proposal. This
+shows why the bridge matters: rejection becomes useful feedback, not just
+failure.
+
 The HandoffBridge orchestrates round-trips between the loop half and
 structured half. Each round: loop runs, if next_action=handoff_to_structured
 the bridge writes a forward handoff file, invokes structured, and then

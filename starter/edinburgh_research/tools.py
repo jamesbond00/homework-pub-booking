@@ -59,18 +59,8 @@ def _invalid_result(tool_name: str, arguments: dict, message: str, **context: ob
 
 
 def _area_tokens(value: object) -> set[str]:
-    normalized = (
-        str(value)
-        .casefold()
-        .replace(",", " ")
-        .replace("-", " ")
-        .replace("_", " ")
-    )
-    return {
-        token
-        for token in normalized.split()
-        if token and token not in _AREA_STOPWORDS
-    }
+    normalized = str(value).casefold().replace(",", " ").replace("-", " ").replace("_", " ")
+    return {token for token in normalized.split() if token and token not in _AREA_STOPWORDS}
 
 
 def _area_matches(query: str, venue_area: object) -> bool:
