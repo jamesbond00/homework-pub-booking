@@ -1,7 +1,7 @@
 # Real-mode failures — a catalogue
 
 This is the reference for every failure mode we've seen when running the
-homework against LIVE services (Nebius LLMs, Rasa Pro, Speechmatics, Rime).
+homework against LIVE services (Nebius LLMs, Rasa Pro, Speechmatics, ElevenLabs).
 They're not bugs to suppress — they're the teaching moments. Students
 WILL hit at least one of these, and learning to diagnose them is
 Decision 7 (**observability as a first-class primitive**) in action.
@@ -258,30 +258,29 @@ cap. If you exceeded it you'll get 403.
 
 ---
 
-## Ex8 — Rime TTS 400 "invalid voice"
+## Ex8 — ElevenLabs TTS 400/422 invalid voice
 
 ### What it looks like
 
 ```
-httpx.HTTPStatusError: 400 Bad Request — {"error": "invalid voice name"}
+RuntimeError: ElevenLabs 400: ...
 ```
 
 ### Why
 
-Rime.ai renames their voices. The voice we wire to by default
-(`luna`, `abbie`, `amelia`, etc.) may have been replaced.
+The configured `ELEVENLABS_VOICE_ID` is not available to your account,
+or the TTS request payload is invalid for the selected model.
 
 ### Fix
 
-Open `starter/voice_pipeline/voice_loop.py`, find `_call_rime_tts`,
-check the `voice_name` field. Get the current voice list:
+List voices available to your key:
 
 ```bash
-curl -H "Authorization: Bearer $RIME_API_KEY" \
-     https://users.rime.ai/data/voices/all | python -m json.tool
+curl -H "xi-api-key: $ELEVENLABS_API_KEY" \
+     https://api.elevenlabs.io/v1/voices | python -m json.tool
 ```
 
-Pick an Arcana voice (the natural-sounding line) and update the code.
+Set `ELEVENLABS_VOICE_ID` in `.env` to a voice id from that response.
 
 ---
 

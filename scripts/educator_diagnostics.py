@@ -6,7 +6,7 @@ copy-pasteable report with:
   - Platform + Python + uv + Docker versions
   - Every env var the exercises depend on (values masked)
   - Service availability checks (Docker daemon, Rasa license, Nebius auth,
-    Speechmatics auth, Rime.ai auth) — tells you what's missing
+    Speechmatics auth, ElevenLabs auth) — tells you what's missing
   - Exact rasa-pro package version
   - Last ci-real or validate log excerpt if available
   - Git state (branch, HEAD, dirty?) if git is available
@@ -180,7 +180,7 @@ def section_env_vars() -> Section:
         ("SOVEREIGN_AGENT_LLM_EXECUTOR_MODEL", "Ex5, Ex7 (defaults fine)"),
         ("RASA_PRO_LICENSE", "Ex6 (Rasa Pro container)"),
         ("SPEECHMATICS_KEY", "Ex8 voice"),
-        ("RIME_API_KEY", "Ex8 voice TTS"),
+        ("ELEVENLABS_API_KEY", "Ex8 voice TTS"),
     ]
     for var, purpose in important:
         val = all_env.get(var, "")
@@ -334,42 +334,40 @@ def section_service_auth(quick: bool) -> Section:
         except Exception as e:  # noqa: BLE001
             s.checks.append(Check("Speechmatics auth", ok=False, detail=f"{type(e).__name__}: {e}"))
 
-    # Rime.ai — probe auth via their API
-    rime_key = env_vars.get("RIME_API_KEY", "")
-    if not rime_key:
+    # ElevenLabs — probe auth via their API
+    elevenlabs_key = env_vars.get("ELEVENLABS_API_KEY", "")
+    if not elevenlabs_key:
         s.checks.append(
             Check(
-                "Rime.ai auth",
+                "ElevenLabs auth",
                 ok=None,
-                detail="RIME_API_KEY not set (only needed for Ex8 voice TTS)",
+                detail="ELEVENLABS_API_KEY not set (only needed for Ex8 voice TTS)",
             )
         )
     else:
         try:
             import urllib.request
 
-            # Rime.ai TTS endpoint — a bare GET to /v1/rime-tts returns auth error or method not allowed
-            # depending on path. We just want to confirm the key is recognised.
             req = urllib.request.Request(
-                "https://users.rime.ai/v1/user",
-                headers={"Authorization": f"Bearer {rime_key}"},
+                "https://api.elevenlabs.io/v1/user",
+                headers={"xi-api-key": elevenlabs_key},
                 method="GET",
             )
             try:
                 with urllib.request.urlopen(req, timeout=10) as resp:
-                    s.checks.append(Check("Rime.ai auth", ok=True, detail=f"HTTP {resp.status}"))
+                    s.checks.append(Check("ElevenLabs auth", ok=True, detail=f"HTTP {resp.status}"))
             except urllib.error.HTTPError as he:
                 ok = he.code != 401 and he.code != 403
                 s.checks.append(
                     Check(
-                        "Rime.ai auth",
+                        "ElevenLabs auth",
                         ok=ok,
                         detail=f"HTTP {he.code}"
                         + (" (key invalid)" if he.code in (401, 403) else " (reachable)"),
                     )
                 )
         except Exception as e:  # noqa: BLE001
-            s.checks.append(Check("Rime.ai auth", ok=False, detail=f"{type(e).__name__}: {e}"))
+            s.checks.append(Check("ElevenLabs auth", ok=False, detail=f"{type(e).__name__}: {e}"))
 
     return s
 

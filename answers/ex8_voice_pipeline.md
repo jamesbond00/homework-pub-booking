@@ -5,7 +5,7 @@
 The voice pipeline has two modes with shared trace-event contract:
 text mode (run_text_mode, shipped complete) reads stdin and the
 manager persona replies via Llama-3.3-70B; voice mode (run_voice_mode,
-implemented here) uses Speechmatics for STT.
+implemented here) uses Speechmatics for STT and ElevenLabs for TTS.
 
 The critical design choice is graceful degradation. run_voice_mode
 checks SPEECHMATICS_KEY and the speechmatics-python import before
@@ -13,6 +13,12 @@ doing anything else. If either is missing, it logs a warning and
 falls through to run_text_mode. This means CI can pass the "voice
 loop implemented" check without Speechmatics credentials — the same
 code runs, just under the simpler transport.
+
+ElevenLabs is optional after STT succeeds. If ELEVENLABS_API_KEY is
+missing, voice mode still transcribes the user and gets the manager
+reply, but prints the reply instead of trying to play audio. This
+matches the assignment and the meeting-note decision to standardize
+Ex8 on 11Labs rather than Rime/Rhyme.
 
 Both modes emit voice.utterance_in and voice.utterance_out trace
 events with payload {text, turn, mode}. The mode field tells the

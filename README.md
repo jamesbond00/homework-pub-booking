@@ -20,7 +20,7 @@ By the time you finish:
 - **Ex7** — you wire the round-trip bridge. The loop half and the
   structured half talk across process boundaries via atomic file IPC.
 - **Ex8** — the pub manager calls back. Real voice: Speechmatics for
-  speech-to-text, Rime Arcana for text-to-speech.
+  speech-to-text, ElevenLabs for text-to-speech.
 - **Ex9** — reflection questions grounded in YOUR session logs.
 
 If this sounds ambitious, it is. That's the point. Production agent
@@ -268,15 +268,15 @@ make setup-voice
 # Then: System Settings → Privacy & Security → Microphone → grant terminal access
 ```
 
-**Get API keys** from https://portal.speechmatics.com and https://rime.ai.
-Add `SPEECHMATICS_KEY` and `RIME_API_KEY` to `.env`.
+**Get API keys** from https://portal.speechmatics.com and https://elevenlabs.io.
+Add `SPEECHMATICS_KEY` and `ELEVENLABS_API_KEY` to `.env`.
 
 Implement `run_voice_mode` in `starter/voice_pipeline/voice_loop.py`:
 
 - Mic capture via `sounddevice`
 - Speechmatics real-time STT over websocket
 - Pub-manager reply from Llama-3.3 via `manager_persona.py`
-- Rime Arcana TTS → MP3 → pydub decode → sounddevice playback
+- ElevenLabs TTS → MP3 → pydub decode → sounddevice playback
 
 **Run:**
 
@@ -444,11 +444,11 @@ problem from those.
 | `NEBIUS_KEY` | All LLM calls | Yes — free sign-up at tokenfactory.nebius.com |
 | `RASA_PRO_LICENSE` | Ex6 real Rasa server | Yes — developer edition at rasa.com |
 | `SPEECHMATICS_KEY` | Ex8 voice STT | Yes — 2h audio/month at portal.speechmatics.com |
-| `RIME_API_KEY` | Ex8 voice TTS | Yes — rime.ai |
+| `ELEVENLABS_API_KEY` | Ex8 voice TTS | Yes — elevenlabs.io |
 
 **Minimum for Ex5+Ex7+Ex9:** just `NEBIUS_KEY`.
 **Add for Ex6:** `RASA_PRO_LICENSE`.
-**Add for Ex8 voice:** `SPEECHMATICS_KEY` + `RIME_API_KEY`.
+**Add for Ex8 voice:** `SPEECHMATICS_KEY` + `ELEVENLABS_API_KEY`.
 
 Total LLM spend for the whole homework: under £0.50 if you run every
 `-real` command 3-5 times.

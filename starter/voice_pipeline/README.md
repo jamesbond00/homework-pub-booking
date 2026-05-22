@@ -13,7 +13,8 @@ fallback.
 - **Text mode** (`--text`, default): stdin/stdout. Zero extra setup. Full
   credit for this mode alone is 16/20.
 - **Voice mode** (`--voice`): real audio via Speechmatics + ElevenLabs.
-  Requires `SPEECHMATICS_KEY` in `.env`. Full credit is 20/20.
+  Requires `SPEECHMATICS_KEY` for STT and `ELEVENLABS_API_KEY` for spoken
+  replies in `.env`. Full credit is 20/20.
 
 ## Files
 

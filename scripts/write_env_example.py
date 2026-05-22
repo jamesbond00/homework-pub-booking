@@ -48,8 +48,10 @@ RASA_PRO_LICENSE=
 # --- OPTIONAL: Ex8 voice pipeline -------------------------------------
 # Only needed if you run `make ex8-voice`. Text mode needs neither.
 SPEECHMATICS_KEY=
-# Rime.ai TTS — uses the Arcana model for voice output.
-RIME_API_KEY=
+# ElevenLabs TTS — optional voice output for Ex8 voice mode.
+ELEVENLABS_API_KEY=
+# Optional. If unset, the ElevenLabs docs example voice is used.
+ELEVENLABS_VOICE_ID=
 """
 
 
